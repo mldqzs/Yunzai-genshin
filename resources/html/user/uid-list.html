@@ -8,7 +8,8 @@
 {{ set gameMap = {
 gs:{mark:'#'},
 sr:{mark:'*'},
-zzz:{mark:'%'}
+zzz:{mark:'%'},
+bh3:{mark:'!'}
 }; }}
 
 
@@ -27,9 +28,9 @@ zzz:{mark:'%'}
         <div class="game-idx">
           <span>{{idx+1}}</span>
         </div>
-        <div class="game-bar" style="background-image:url({{if uid.zzz_banner}}{{_res_path}}/ZZZero/img/other/banner.png{{else}}{{_miao_path}}{{uid.banner}}{{/if}})">
+        <div class="game-bar"{{if uid.bh3_banner}}{{else}} style="background-image:url({{if uid.zzz_banner}}{{_res_path}}/ZZZero/img/other/banner.png{{else}}{{_miao_path}}{{uid.banner}}{{/if}})"{{/if}}>
           <div class="game-inner">
-            <div class="face" style="background-image:url({{if uid.zzz_face}}{{_miao_path}}/common/item/face.webp{{else}}{{_miao_path}}{{uid.face}}{{/if}})"></div>
+            <div class="face" style="background-image:url({{if uid.zzz_face || uid.bh3_face}}{{_miao_path}}/common/item/face.webp{{else}}{{_miao_path}}{{uid.face}}{{/if}})"></div>
             <div class="info">
               <div class="uid-info">
                 <div class="uid shadow">{{uid.uid}}<span>{{uid.uid}}</span></div>
@@ -52,10 +53,14 @@ zzz:{mark:'%'}
       </div>
       {{/each}}
       {{else}}
+      {{if game.key === 'bh3'}}
+      <div class="no-uid">暂无崩坏三账号，请扫码绑定米游社后查询</div>
+      {{else}}
       <div class="no-uid">暂无uid，请发送CK或通过
         <nobr>{{mark}}绑定123456789</nobr>
         来绑定UID
       </div>
+      {{/if}}
       {{/if}}
     </div>
 

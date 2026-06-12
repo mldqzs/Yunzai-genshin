@@ -315,6 +315,29 @@ export default class User extends base {
         }
       })
     })
+
+    // 崩坏三 uid（复用账号共享 cookie 解析，依赖 miao-plugin 的 Bh3Api）。始终展示崩三栏，未绑定则在模板提示扫码绑定
+    let bh3Entry = { key: "bh3", name: "崩坏三", uid: "", uidList: [] }
+    try {
+      let mysUser = user.getMysUser("gs") || Object.values(user.mysUsers || {})[0]
+      let ck = mysUser?.ck
+      if (ck) {
+        let { default: Bh3Api } = await import("../../miao-plugin/models/bh3/Bh3Api.js")
+        let api = new Bh3Api(ck, { log: false })
+        let res = await api.getRoles()
+        if (res?.retcode === 0 && api.uid) {
+          let r = api.roleInfo || {}
+          bh3Entry.uid = api.uid
+          bh3Entry.uidList = [
+            { uid: api.uid, type: "ck", name: r.nickname, level: r.level, bh3_face: true, bh3_banner: true },
+          ]
+        }
+      }
+    } catch (err) {
+      logger?.debug?.(`[崩坏三][uid] 解析跳过：${err}`)
+    }
+    uids.push(bh3Entry)
+
     return this.e.reply([
       await this.e.runtime.render("genshin", "html/user/uid-list", { uids }, { retType: "base64" }),
       segment.button(

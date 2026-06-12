@@ -34,7 +34,7 @@ export class user extends plugin {
           fnc: "myCk",
         },
         {
-          reg: /^#?(原神|星铁|绝区零)?删除c(oo)?k(ie)?$/i,
+          reg: /^[#!！]?(原神|星铁|绝区零|崩坏三|崩三)?删除c(oo)?k(ie)?$/i,
           fnc: "delCk",
         },
         {
@@ -46,7 +46,7 @@ export class user extends plugin {
           fnc: "bingUid",
         },
         {
-          reg: /^#(原神|星铁|绝区零)?(我的)?(uid)[0-9]{0,2}$/i,
+          reg: /^[#!！](原神|星铁|绝区零|崩坏三|崩三)?(我的)?(uid)[0-9]{0,2}$/i,
           fnc: "showUid",
         },
         {
