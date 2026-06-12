@@ -188,9 +188,44 @@ export default class User extends base {
     if (mys.hasGame("zzz")) {
       msg.push("绝区零支持：", "无")
     }
+    // 崩坏三（cookie 共享，非注册游戏，无条件展示）——单独一个转发节点，合并进同一聊天记录
+    let bh3Msg = [
+      "崩坏三支持：",
+      "【!uid】当前绑定ck uid列表",
+      "【!删除ck】删除当前绑定ck",
+      "【!总览】账号总览　【!体力】实时便签",
+      "【!角色】【!武器】角色 / 装备",
+      "【!往世乐土】【!超弦空间】【!记忆战场】玩法数据",
+      "【!周报】一周成绩单",
+      "【!水晶】【!今年水晶统计】水晶数据",
+    ]
+    let bh3Button = [
+      [
+        { text: "!uid", callback: "!uid" },
+        { text: "!总览", callback: "!总览" },
+        { text: "!体力", callback: "!体力" },
+      ],
+      [
+        { text: "!角色", callback: "!角色" },
+        { text: "!武器", callback: "!武器" },
+        { text: "!往世乐土", callback: "!往世乐土" },
+      ],
+      [
+        { text: "!超弦空间", callback: "!超弦空间" },
+        { text: "!记忆战场", callback: "!记忆战场" },
+        { text: "!周报", callback: "!周报" },
+      ],
+      [
+        { text: "!水晶", callback: "!水晶" },
+        { text: "!今年水晶统计", callback: "!今年水晶统计" },
+      ],
+    ]
     msg = await common.makeForwardMsg(
       this.e,
-      [[msg.join("\n"), segment.button(...button)]],
+      [
+        [msg.join("\n"), segment.button(...button)],
+        [bh3Msg.join("\n"), segment.button(...bh3Button)],
+      ],
       "绑定成功：使用命令说明",
     )
     await this.e.reply(msg)
@@ -316,30 +351,33 @@ export default class User extends base {
       })
     })
 
-    // 崩坏三 uid（依赖 miao-plugin 的 Bh3Api）。遍历用户所有 CK，展示全部崩三账号并去重；未绑定则在模板提示扫码绑定
+    // 崩坏三 uid（依赖 miao-plugin 的 Bh3Api）。遍历所有 CK 展示全部崩三账号并去重；勾选项取当前激活 gs 账号对应的崩三号，与 !角色 查询一致
     let bh3List = []
+    let activeBh3Uid = ""
     try {
       let mysUsers = user.mysUsers || {}
       let ltuids = Object.keys(mysUsers)
       if (ltuids.length) {
         let { default: Bh3Api } = await import("../../miao-plugin/models/bh3/Bh3Api.js")
+        let activeLtuid = String(user.getMysUser("gs")?.ltuid || "")
         let seen = new Set()
         for (let ltuid of ltuids) {
           let ck = mysUsers[ltuid]?.ck
           if (!ck) continue
           let api = new Bh3Api(ck, { log: false })
           let res = await api.getRoles().catch(() => false)
-          if (res?.retcode === 0 && api.uid && !seen.has(String(api.uid))) {
-            seen.add(String(api.uid))
-            let r = api.roleInfo || {}
-            bh3List.push({ uid: api.uid, type: "ck", name: r.nickname, level: r.level, bh3_face: true, bh3_banner: true })
-          }
+          if (res?.retcode !== 0 || !api.uid) continue
+          if (String(ltuid) === activeLtuid) activeBh3Uid = String(api.uid)
+          if (seen.has(String(api.uid))) continue
+          seen.add(String(api.uid))
+          let r = api.roleInfo || {}
+          bh3List.push({ uid: api.uid, type: "ck", name: r.nickname, level: r.level, bh3_face: true, bh3_banner: true })
         }
       }
     } catch (err) {
       logger?.debug?.(`[崩坏三][uid] 解析跳过：${err}`)
     }
-    uids.push({ key: "bh3", name: "崩坏三", uid: bh3List[0]?.uid || "", uidList: bh3List })
+    uids.push({ key: "bh3", name: "崩坏三", uid: activeBh3Uid || bh3List[0]?.uid || "", uidList: bh3List })
 
     return this.e.reply([
       await this.e.runtime.render("genshin", "html/user/uid-list", { uids }, { retType: "base64" }),
